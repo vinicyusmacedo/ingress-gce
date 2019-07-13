@@ -19,8 +19,9 @@ package loadbalancers
 import (
 	"encoding/json"
 	"fmt"
-	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 	"strings"
+
+	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
@@ -147,16 +148,15 @@ func (l *L7) edgeHop() error {
 	}
 	// Defer promoting an ephemeral to a static IP until it's really needed.
 	sslConfigured := l.runtimeInfo.TLS != nil || l.runtimeInfo.TLSName != ""
-	if l.runtimeInfo.AllowHTTP && sslConfigured {
-		klog.V(3).Infof("checking static ip for %v", l.Name)
-		if err := l.checkStaticIP(); err != nil {
-			return err
-		}
-	}
+
 	if sslConfigured {
 		willConfigureFrontend = true
 		klog.V(3).Infof("validating https for %v", l.Name)
 		if err := l.edgeHopHttps(); err != nil {
+			return err
+		}
+		klog.V(3).Infof("checking static ip for %v", l.Name)
+		if err := l.checkStaticIP(); err != nil {
 			return err
 		}
 	}

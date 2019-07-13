@@ -27,7 +27,13 @@ import (
 
 // checkStaticIP reserves a static IP allocated to the Forwarding Rule.
 func (l *L7) checkStaticIP() (err error) {
-	if l.fw == nil || l.fw.IPAddress == "" {
+	var fw *compute.ForwardingRule
+	if l.fws != nil {
+		fw = l.fws
+	} else if l.fw != nil {
+		fw = l.fw
+	}
+	if fw == nil || fw.IPAddress == "" {
 		return fmt.Errorf("will not create static IP without a forwarding rule")
 	}
 	// Don't manage staticIPs if the user has specified an IP.
@@ -39,12 +45,12 @@ func (l *L7) checkStaticIP() (err error) {
 	ip, _ := l.cloud.GetGlobalAddress(staticIPName)
 	if ip == nil {
 		klog.V(3).Infof("Creating static ip %v", staticIPName)
-		err = l.cloud.ReserveGlobalAddress(&compute.Address{Name: staticIPName, Address: l.fw.IPAddress})
+		err = l.cloud.ReserveGlobalAddress(&compute.Address{Name: staticIPName, Address: fw.IPAddress})
 		if err != nil {
 			if utils.IsHTTPErrorCode(err, http.StatusConflict) ||
 				utils.IsHTTPErrorCode(err, http.StatusBadRequest) {
 				klog.V(3).Infof("IP %v(%v) is already reserved, assuming it is OK to use.",
-					l.fw.IPAddress, staticIPName)
+					fw.IPAddress, staticIPName)
 				return nil
 			}
 			return err
