@@ -19,14 +19,15 @@ package loadbalancers
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"testing"
+
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/mock"
 	"google.golang.org/api/googleapi"
 	"k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
 	"k8s.io/kubernetes/pkg/util/slice"
-	"net/http"
-	"testing"
 
 	"google.golang.org/api/compute/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -163,7 +164,10 @@ func TestCreateHTTPLoadBalancer(t *testing.T) {
 
 	l7, err := j.pool.Ensure(lbInfo)
 	if err != nil || l7 == nil {
-		t.Fatalf("Expected l7 not created, err: %v", err)
+		t.Fatalf("Expected l7 not created. l7 %v err %v", l7, err)
+	}
+	if l7.ip != nil {
+		t.Fatalf("Expected no static IP, got %v", l7.ip)
 	}
 	verifyHTTPForwardingRuleAndProxyLinks(t, j)
 }
@@ -186,7 +190,10 @@ func TestCreateHTTPSLoadBalancer(t *testing.T) {
 
 	l7, err := j.pool.Ensure(lbInfo)
 	if err != nil || l7 == nil {
-		t.Fatalf("Expected l7 not created")
+		t.Fatalf("Expected l7 not created. l7 %v err %v", l7, err)
+	}
+	if l7.ip == nil {
+		t.Fatalf("Expected static IP, got none")
 	}
 	verifyHTTPSForwardingRuleAndProxyLinks(t, j)
 }
@@ -786,7 +793,10 @@ func TestCreateHTTPSLoadBalancerAnnotationCert(t *testing.T) {
 	}
 	l7, err := j.pool.Ensure(lbInfo)
 	if err != nil || l7 == nil {
-		t.Fatalf("Expected l7 not created")
+		t.Fatalf("Expected l7 not created. l7 %v err %v", l7, err)
+	}
+	if l7.ip == nil {
+		t.Fatalf("Expected static IP, got none")
 	}
 	verifyHTTPSForwardingRuleAndProxyLinks(t, j)
 }
