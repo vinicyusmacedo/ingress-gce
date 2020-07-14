@@ -1055,7 +1055,7 @@ func TestReserveGlobalStaticIP(t *testing.T) {
 }
 
 // When an existing StaticIP value is specified and ReserveGlobalStaticIP is specified,
-// ingress creation must fail.
+// the behavior shouldn't be different from not specifying ReserveGlobalStaticIP (ingress creation must pass).
 func TestReserveGlobalStaticIPExistingValue(t *testing.T) {
 	j := newTestJig(t)
 	gceUrlMap := utils.NewGCEURLMap()
@@ -1075,13 +1075,15 @@ func TestReserveGlobalStaticIPExistingValue(t *testing.T) {
 		ReserveGlobalStaticIP: true,
 	}
 
+	// The only difference from the default behavior is that, with ReserveGlobalStaticIP set
+	// and by specifying a non-existent IP, the IP will be managed by GLBC.
 	// Create static IP
 	err := j.fakeGCE.ReserveGlobalAddress(&compute.Address{Name: "teststaticip", Address: "1.2.3.4"})
 	if err != nil {
 		t.Fatalf("ip address reservation failed - %v", err)
 	}
-	if _, err := j.pool.Ensure(lbInfo); err == nil {
-		t.Fatalf("expected error ensuring ingress with existent static ip and ReserveGlobalStaticIP set")
+	if _, err := j.pool.Ensure(lbInfo); err != nil {
+		t.Fatalf("unexpected error %v", err)
 	}
 }
 
