@@ -1049,9 +1049,6 @@ func TestReserveGlobalStaticIP(t *testing.T) {
 	if _, err := j.fakeGCE.GetGlobalAddress("teststaticip"); err != nil {
 		t.Fatalf("ip address reservation failed - %v", err)
 	}
-	if _, err := j.pool.Ensure(lbInfo); err != nil {
-		t.Fatalf("expected error ensuring ingress with non-existent static ip")
-	}
 }
 
 // When an existing StaticIP value is specified and ReserveGlobalStaticIP is specified,
