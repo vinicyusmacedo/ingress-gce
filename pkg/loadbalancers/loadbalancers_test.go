@@ -1020,6 +1020,71 @@ func TestStaticIP(t *testing.T) {
 	}
 }
 
+// Test ReserveGlobalStaticIP annotation behavior.
+// When a non-existent StaticIP value is specified and ReserveGlobalStaticIP is specified,
+// a static IP with the StaticIP value should be created.
+func TestReserveGlobalStaticIP(t *testing.T) {
+	j := newTestJig(t)
+	gceUrlMap := utils.NewGCEURLMap()
+	gceUrlMap.DefaultBackend = &utils.ServicePort{NodePort: 31234, BackendNamer: j.namer}
+	gceUrlMap.PutPathRulesForHost("bar.example.com", []utils.PathRule{{Path: "/bar", Backend: utils.ServicePort{NodePort: 30000, BackendNamer: j.namer}}})
+	ing := newIngress()
+	ing.Annotations = map[string]string{
+		"StaticIPNameKey":          "teststaticip",
+		"ReserveGlobalStaticIPKey": "true",
+	}
+	lbInfo := &L7RuntimeInfo{
+		AllowHTTP:             true,
+		TLS:                   []*TLSCerts{{Key: "key", Cert: "cert"}},
+		UrlMap:                gceUrlMap,
+		Ingress:               ing,
+		StaticIPName:          "teststaticip",
+		ReserveGlobalStaticIP: true,
+	}
+
+	if _, err := j.pool.Ensure(lbInfo); err != nil {
+		t.Fatalf("expected no error ensuring ingress with non-existent static ip with ReserveGlobalStaticIP set - %v", err)
+	}
+	// Get the reserved static IP value
+	if _, err := j.fakeGCE.GetGlobalAddress("teststaticip"); err != nil {
+		t.Fatalf("ip address reservation failed - %v", err)
+	}
+	if _, err := j.pool.Ensure(lbInfo); err != nil {
+		t.Fatalf("expected error ensuring ingress with non-existent static ip")
+	}
+}
+
+// When an existing StaticIP value is specified and ReserveGlobalStaticIP is specified,
+// ingress creation must fail.
+func TestReserveGlobalStaticIPExistingValue(t *testing.T) {
+	j := newTestJig(t)
+	gceUrlMap := utils.NewGCEURLMap()
+	gceUrlMap.DefaultBackend = &utils.ServicePort{NodePort: 31234, BackendNamer: j.namer}
+	gceUrlMap.PutPathRulesForHost("bar.example.com", []utils.PathRule{{Path: "/bar", Backend: utils.ServicePort{NodePort: 30000, BackendNamer: j.namer}}})
+	ing := newIngress()
+	ing.Annotations = map[string]string{
+		"StaticIPNameKey":          "teststaticip",
+		"ReserveGlobalStaticIPKey": "true",
+	}
+	lbInfo := &L7RuntimeInfo{
+		AllowHTTP:             true,
+		TLS:                   []*TLSCerts{{Key: "key", Cert: "cert"}},
+		UrlMap:                gceUrlMap,
+		Ingress:               ing,
+		StaticIPName:          "teststaticip",
+		ReserveGlobalStaticIP: true,
+	}
+
+	// Create static IP
+	err := j.fakeGCE.ReserveGlobalAddress(&compute.Address{Name: "teststaticip", Address: "1.2.3.4"})
+	if err != nil {
+		t.Fatalf("ip address reservation failed - %v", err)
+	}
+	if _, err := j.pool.Ensure(lbInfo); err == nil {
+		t.Fatalf("expected error ensuring ingress with existent static ip and ReserveGlobalStaticIP set")
+	}
+}
+
 // Test setting frontendconfig Ssl policy
 func TestFrontendConfigSslPolicy(t *testing.T) {
 	flags.F.EnableFrontendConfig = true
