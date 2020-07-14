@@ -25,15 +25,17 @@ import (
 
 func TestIngress(t *testing.T) {
 	for _, tc := range []struct {
-		ing          *v1beta1.Ingress
-		allowHTTP    bool
-		useNamedTLS  string
-		staticIPName string
-		ingressClass string
+		ing                   *v1beta1.Ingress
+		allowHTTP             bool
+		useNamedTLS           string
+		staticIPName          string
+		ingressClass          string
+		reserveGlobalStaticIP bool
 	}{
 		{
-			ing:       &v1beta1.Ingress{},
-			allowHTTP: true, // defaults to true.
+			ing:                   &v1beta1.Ingress{},
+			allowHTTP:             true,  // defaults to true.
+			reserveGlobalStaticIP: false, // defaults to false.
 		},
 		{
 			ing: &v1beta1.Ingress{
@@ -51,6 +53,17 @@ func TestIngress(t *testing.T) {
 			staticIPName: "1.2.3.4",
 			ingressClass: "gce",
 		},
+		{
+			ing: &v1beta1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						ReserveGlobalStaticIPKey: "true",
+					},
+				},
+			},
+			allowHTTP:             true,
+			reserveGlobalStaticIP: true,
+		},
 	} {
 		ing := FromIngress(tc.ing)
 		if x := ing.AllowHTTP(); x != tc.allowHTTP {
@@ -64,6 +77,9 @@ func TestIngress(t *testing.T) {
 		}
 		if x := ing.IngressClass(); x != tc.ingressClass {
 			t.Errorf("ingress %+v; IngressClass() = %v, want %v", tc.ing, x, tc.ingressClass)
+		}
+		if x := ing.ReserveGlobalStaticIP(); x != tc.reserveGlobalStaticIP {
+			t.Errorf("ingress %+v; ReserveGlobalStaticIP() = %v, want %v", tc.ing, x, tc.reserveGlobalStaticIP)
 		}
 	}
 }
