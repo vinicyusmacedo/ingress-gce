@@ -56,7 +56,7 @@ func TestIngress(t *testing.T) {
 			ing: &v1beta1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						ReserveGlobalStaticIPNameKey: "true",
+						ReserveGlobalStaticIPNameKey: "1.2.3.4-managed",
 					},
 				},
 			},
@@ -78,7 +78,7 @@ func TestIngress(t *testing.T) {
 			t.Errorf("ingress %+v; IngressClass() = %v, want %v", tc.ing, x, tc.ingressClass)
 		}
 		if x := ing.ReserveGlobalStaticIPName(); x != tc.reserveGlobalStaticIPName {
-			t.Errorf("ingress %+v; ReserveGlobalStaticIP() = %v, want %v", tc.ing, x, tc.reserveGlobalStaticIPName)
+			t.Errorf("ingress %+v; ReserveGlobalStaticIPName() = %v, want %v", tc.ing, x, tc.reserveGlobalStaticIPName)
 		}
 	}
 }

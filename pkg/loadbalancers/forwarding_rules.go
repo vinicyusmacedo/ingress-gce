@@ -155,7 +155,7 @@ func (l *L7) getEffectiveIP() (string, bool, error) {
 	// User specifies a different IP on startup:
 	//	- We create a forwarding rule with the given IP.
 	//		- If this ip doesn't exist in GCE, an error is thrown which fails ingress creation.
-	//		- If the ReserveGlobalStaticIP annotation is set and this ip doesn't exist in GCE,
+	//		- If the ReserveGlobalStaticIPName annotation is provided and this ip doesn't exist in GCE,
 	// 		  it should be created.
 	//	- In the happy case, no static ip is created or deleted by this controller.
 	// Controller allocates a staticIP/ephemeralIP, but user changes it:
@@ -173,7 +173,7 @@ func (l *L7) getEffectiveIP() (string, bool, error) {
 		// Existing static IPs allocated to forwarding rules will get orphaned
 		// till the Ingress is torn down.
 		if ip, err := l.cloud.GetGlobalAddress(l.runtimeInfo.StaticIPName); err != nil || ip == nil {
-			if l.runtimeInfo.ReserveGlobalStaticIP {
+			if l.runtimeInfo.ReserveGlobalStaticIPName != "" {
 				return "", true, nil
 			}
 			return "", false, fmt.Errorf("the given static IP name %v doesn't translate to an existing global static IP.",

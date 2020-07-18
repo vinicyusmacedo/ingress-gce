@@ -41,12 +41,12 @@ const (
 	// responsibility to create/delete it.
 	StaticIPNameKey = "kubernetes.io/ingress.global-static-ip-name"
 
-	// ReserveGlobalStaticIPKey tells the Ingress controller to manage a specific
-	// GCE static ip for its forwarding rules. If set to true, it should be used with
-	// StaticIPNameKey to create a static ip with the provided name.
-	// If it is unspecified or set to false, the default behavior for StaticIPNameKey
-	// will be used.
-	ReserveGlobalStaticIPKey = "kubernetes.io/ingress.reserve-global-static-ip"
+	// ReserveGlobalStaticIPNameKey tells the Ingress controller to manage a specific
+	// GCE static ip for its forwarding rules. If specified, the Ingress controller
+	// reserves and assigns the static ip by this name to the forwarding rules of the
+	// given ingress. It differs from StaticIPNameKey, since the controller does manage
+	// this ip.
+	ReserveGlobalStaticIPNameKey = "kubernetes.io/ingress.reserve-global-static-ip-name"
 
 	// PreSharedCertKey represents the specific pre-shared SSL
 	// certificate for the Ingress controller to use. The controller *does not*
