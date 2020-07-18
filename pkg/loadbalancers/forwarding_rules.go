@@ -173,7 +173,7 @@ func (l *L7) getEffectiveIP() (string, bool, error) {
 		// Existing static IPs allocated to forwarding rules will get orphaned
 		// till the Ingress is torn down.
 		if ip, err := l.cloud.GetGlobalAddress(l.runtimeInfo.StaticIPName); err != nil || ip == nil {
-			if l.runtimeInfo.ReserveGlobalStaticIPName != "" {
+			if l.runtimeInfo.ReserveGlobalStaticIPName != "" && l.ip == nil {
 				return "", true, nil
 			}
 			return "", false, fmt.Errorf("the given static IP name %v doesn't translate to an existing global static IP.",
