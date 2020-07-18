@@ -115,17 +115,12 @@ func FromIngress(ing *v1beta1.Ingress) *Ingress {
 	return &Ingress{ing.Annotations}
 }
 
-// ReserveGlobalStaticIPKey returns the reserveGlobalStaticIP flag. False by default.
-func (ing *Ingress) ReserveGlobalStaticIP() bool {
-	val, ok := ing.v[ReserveGlobalStaticIPKey]
+func (ing *Ingress) ReserveGlobalStaticIPName() string {
+	val, ok := ing.v[ReserveGlobalStaticIPNameKey]
 	if !ok {
-		return false
+		return ""
 	}
-	v, err := strconv.ParseBool(val)
-	if err != nil {
-		return false
-	}
-	return v
+	return val
 }
 
 // UseNamedTLS returns the name of the GCE SSL certificate. Empty by default.
